@@ -79,7 +79,7 @@
         <div class="hidden md:flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-medium">
           <button onclick="setCtc(1200000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition">₹12L</button>
           <button onclick="setCtc(2500000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition">₹25L</button>
-          <button onclick="setCtc(4200000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 font-bold">₹42L</button>
+          <button onclick="setCtc(4000000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 font-bold">₹42L</button>
           <button onclick="setCtc(6000000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition">₹60L</button>
         </div>
 
@@ -122,7 +122,7 @@
               </div>
               <div class="relative rounded-xl shadow-sm mb-2">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-mono text-sm">₹</span>
-                <input type="number" id="ctcInput" value="4200000" min="300000" max="20000000" step="50000"
+                <input type="number" id="ctcInput" value="1200000" min="300000" max="20000000" step="50000"
                   class="w-full pl-8 pr-4 py-2 text-base font-mono font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition">
               </div>
               <input type="range" id="ctcSlider" min="300000" max="15000000" step="50000" value="1200000"
@@ -493,7 +493,7 @@
   <script>
     // State management
     const state = {
-      ctc: 4200000,
+      ctc: 1200000,
       basicPercent: 40,
       pfMode: 'full', // 'capped' | 'full'
       npsPercent: 0,
@@ -930,7 +930,7 @@
     }
 
     function resetDefaults() {
-      setCtc(4200000);
+      setCtc(1200000);
       state.basicPercent = 40;
       document.getElementById('basicPercentSlider').value = 40;
       setPfMode('full');
