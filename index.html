@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Indian Salary & Tax Calculator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom subtle slider styling */
+    input[type=range] {
+      accent-color: #4f46e5;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #334155;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-50 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+          <i data-lucide="calculator" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            TaxPay India
+            <span class="text-[10px] font-semibold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">FY 2025-26 & 2026-27</span>
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Real-time Take-Home & Gratuity-Aware Tax Simulator</p>
+        </div>
+      </div>
+      
+      <!-- Right Controls -->
+      <div class="flex items-center space-x-2 sm:space-x-4">
+        <!-- Quick CTC Presets -->
+        <div class="hidden md:flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-medium">
+          <button onclick="setCtc(1200000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition">₹12L</button>
+          <button onclick="setCtc(2500000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition">₹25L</button>
+          <button onclick="setCtc(4200000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 font-bold">₹42L</button>
+          <button onclick="setCtc(6000000)" class="px-2.5 py-1 rounded hover:bg-white dark:hover:bg-slate-700 transition">₹60L</button>
+        </div>
+
+        <!-- Dark mode toggle -->
+        <button id="themeToggle" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+          <i data-lucide="moon" id="moonIcon" class="w-4 h-4"></i>
+          <i data-lucide="sun" id="sunIcon" class="w-4 h-4 hidden"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+      
+      <!-- Left Column: Inputs & Controls (5 Cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Primary Parameters Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm transition">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-indigo-500"></i>
+              Salary Parameters
+            </h2>
+            <button onclick="resetDefaults()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-medium">
+              <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset
+            </button>
+          </div>
+
+          <div class="mt-5 space-y-5">
+            <!-- Annual CTC Input & Slider -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label for="ctcInput" class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Annual Gross / CTC (₹)
+                </label>
+                <span id="ctcBadge" class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">₹42.00 Lakh</span>
+              </div>
+              <div class="relative rounded-xl shadow-sm mb-2">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-mono text-sm">₹</span>
+                <input type="number" id="ctcInput" value="4200000" min="300000" max="20000000" step="50000"
+                  class="w-full pl-8 pr-4 py-2 text-base font-mono font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition">
+              </div>
+              <input type="range" id="ctcSlider" min="300000" max="15000000" step="50000" value="4200000"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                <span>₹3L</span>
+                <span>₹50L</span>
+                <span>₹1Cr</span>
+                <span>₹1.5Cr</span>
+              </div>
+            </div>
+
+            <!-- Basic Salary % of CTC -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-1.5">
+                  <label for="basicPercentSlider" class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Basic Salary (% of CTC)
+                  </label>
+                  <span class="text-[10px] text-slate-400" title="Forms base for Gratuity & PF">(Crucial for Gratuity & PF)</span>
+                </div>
+                <span id="basicPercentBadge" class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">40%</span>
+              </div>
+              <input type="range" id="basicPercentSlider" min="20" max="60" step="5" value="40"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                <span>Monthly Basic: <strong id="monthlyBasicText" class="font-mono text-slate-700 dark:text-slate-200">₹1,40,000</strong></span>
+                <span>Annual Basic: <strong id="annualBasicText" class="font-mono text-slate-700 dark:text-slate-200">₹16.80L</strong></span>
+              </div>
+            </div>
+
+            <!-- EPF Contribution Mode -->
+            <div>
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
+                Employee Provident Fund (EPF) Mode
+              </label>
+              <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
+                <button type="button" id="pfModeCapped" onclick="setPfMode('capped')"
+                  class="py-2 px-3 text-xs font-semibold rounded-lg text-center transition flex flex-col items-center gap-0.5 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-600">
+                  <span>Capped Statutory</span>
+                  <span class="text-[10px] font-normal text-slate-500 dark:text-slate-400">₹1,800 / month</span>
+                </button>
+                <button type="button" id="pfModeFull" onclick="setPfMode('full')"
+                  class="py-2 px-3 text-xs font-semibold rounded-lg text-center transition flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600">
+                  <span>Full 12% of Basic</span>
+                  <span id="pfFullSubtext" class="text-[10px] font-normal text-slate-500 dark:text-slate-400">12% on actual</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Employer NPS 80CCD(2) -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-1.5">
+                  <label for="npsSlider" class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Employer NPS [Sec 80CCD(2)]
+                  </label>
+                  <span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold rounded">Tax-Free in New Regime</span>
+                </div>
+                <span id="npsBadge" class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">0% of Basic</span>
+              </div>
+              <input type="range" id="npsSlider" min="0" max="14" step="1" value="0"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                <span>Deduction: <strong id="npsAnnualDeductionText" class="font-mono text-slate-700 dark:text-slate-200">₹0/yr</strong></span>
+                <span class="text-[10px] text-slate-400">Max 14% allowed</span>
+              </div>
+            </div>
+
+            <!-- Professional Tax -->
+            <div class="flex items-center justify-between pt-1 text-xs">
+              <span class="font-semibold text-slate-700 dark:text-slate-300">Professional Tax (PT)</span>
+              <div class="flex items-center gap-2">
+                <span class="text-slate-500 dark:text-slate-400 font-mono">₹200/mo (₹2,400/yr)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regime Selector & Deductions -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm transition">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <i data-lucide="scale" class="w-4 h-4 text-indigo-500"></i>
+              Tax Regime Selection
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl mt-4">
+            <button type="button" id="regimeNewBtn" onclick="setRegime('new')"
+              class="py-2.5 px-3 rounded-lg text-xs font-bold text-center transition flex flex-col items-center justify-center bg-indigo-600 text-white shadow">
+              <span>New Tax Regime</span>
+              <span class="text-[10px] font-normal opacity-90">FY 2025-26 & 2026-27 Slabs</span>
+            </button>
+            <button type="button" id="regimeOldBtn" onclick="setRegime('old')"
+              class="py-2.5 px-3 rounded-lg text-xs font-semibold text-center transition flex flex-col items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600">
+              <span>Old Tax Regime</span>
+              <span class="text-[10px] font-normal text-slate-400">With 80C, 80D, HRA</span>
+            </button>
+          </div>
+
+          <!-- Old Regime Deductions Accordion -->
+          <div id="oldRegimeOptions" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3.5 hidden">
+            <div class="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/50 flex items-start gap-2">
+              <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+              <span>These deductions apply <strong>only</strong> when calculating tax under the Old Regime.</span>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="font-medium text-slate-700 dark:text-slate-300">Sec 80C (PPF, ELSS, EPF, Life Ins.)</span>
+                <span class="font-mono font-bold text-slate-800 dark:text-slate-200" id="ded80CBadge">₹1,50,000</span>
+              </div>
+              <input type="range" id="ded80CSlider" min="0" max="150000" step="5000" value="150000"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="font-medium text-slate-700 dark:text-slate-300">Sec 80D (Health Insurance Premium)</span>
+                <span class="font-mono font-bold text-slate-800 dark:text-slate-200" id="ded80DBadge">₹25,000</span>
+              </div>
+              <input type="range" id="ded80DSlider" min="0" max="100000" step="5000" value="25000"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="font-medium text-slate-700 dark:text-slate-300">House Rent Allowance (HRA) Exemption</span>
+                <span class="font-mono font-bold text-slate-800 dark:text-slate-200" id="dedHraBadge">₹0</span>
+              </div>
+              <input type="range" id="dedHraSlider" min="0" max="600000" step="10000" value="0"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="font-medium text-slate-700 dark:text-slate-300">Sec 24(b) (Home Loan Interest)</span>
+                <span class="font-mono font-bold text-slate-800 dark:text-slate-200" id="dedHomeLoanBadge">₹0</span>
+              </div>
+              <input type="range" id="dedHomeLoanSlider" min="0" max="200000" step="10000" value="0"
+                class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Results, Cards, Chart, Breakdowns (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Primary KPI Cards Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <!-- In Hand Monthly -->
+          <div class="col-span-2 sm:col-span-2 bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 text-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-indigo-600/20 relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+            <div class="flex items-center justify-between text-indigo-200 text-xs font-semibold mb-1">
+              <span>MONTHLY NET IN-HAND</span>
+              <i data-lucide="wallet" class="w-4 h-4 opacity-75"></i>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight" id="kpiMonthlyInHand">₹2,62,150</div>
+            <div class="text-[11px] text-indigo-100/90 mt-1 flex items-center gap-1.5">
+              <span>Annual: <strong class="font-mono" id="kpiAnnualInHand">₹31.46 Lakh</strong></span>
+            </div>
+          </div>
+
+          <!-- Monthly TDS -->
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 text-[11px] font-semibold mb-1">
+              <span>MONTHLY TDS</span>
+              <i data-lucide="receipt" class="w-3.5 h-3.5 text-rose-500"></i>
+            </div>
+            <div class="text-lg sm:text-xl font-bold font-mono text-rose-600 dark:text-rose-400" id="kpiMonthlyTax">₹70,850</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Annual: <span class="font-mono font-semibold" id="kpiAnnualTax">₹8.50L</span></div>
+          </div>
+
+          <!-- Monthly EPF -->
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 text-[11px] font-semibold mb-1">
+              <span>MONTHLY EPF</span>
+              <i data-lucide="piggy-bank" class="w-3.5 h-3.5 text-emerald-500"></i>
+            </div>
+            <div class="text-lg sm:text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400" id="kpiMonthlyPf">₹16,800</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Annual: <span class="font-mono font-semibold" id="kpiAnnualPf">₹2.02L</span></div>
+          </div>
+        </div>
+
+        <!-- Regime Comparison Pill Banner -->
+        <div id="regimeComparisonBanner" class="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-100 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shrink-0">
+              VS
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-900 dark:text-slate-100" id="comparisonTitle">Comparing New vs Old Regime</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400" id="comparisonSubtitle">Evaluating tax difference based on your current deductions.</p>
+            </div>
+          </div>
+          <div class="text-right self-end sm:self-auto">
+            <span id="comparisonDiffBadge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+              New Regime saves ₹X
+            </span>
+          </div>
+        </div>
+
+        <!-- Monthly Breakdown: Donut Chart + Ledger Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i>
+            Monthly Salary Distribution (Gross: <span id="monthlyGrossHeader" class="font-mono font-semibold text-slate-700 dark:text-slate-200">₹3,50,000</span>)
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <!-- Donut Chart Container -->
+            <div class="md:col-span-5 flex justify-center relative">
+              <div class="w-48 h-48 sm:w-52 sm:h-52 relative">
+                <canvas id="monthlyDonutChart"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span class="text-[11px] text-slate-400 font-medium">In-Hand Ratio</span>
+                  <span class="text-lg font-bold font-mono text-slate-800 dark:text-white" id="inHandPercentCenter">74.9%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ledger Breakdown -->
+            <div class="md:col-span-7 space-y-2.5 text-xs font-medium">
+              <div class="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40">
+                <span class="flex items-center gap-2 text-indigo-900 dark:text-indigo-200">
+                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                  Take-Home Cash (In-Hand)
+                </span>
+                <span class="font-mono font-bold text-indigo-900 dark:text-indigo-200" id="legendInHand">₹2,62,150</span>
+              </div>
+
+              <div class="flex items-center justify-between p-2 rounded-lg bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40">
+                <span class="flex items-center gap-2 text-rose-900 dark:text-rose-200">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                  Income Tax (TDS)
+                </span>
+                <span class="font-mono font-bold text-rose-900 dark:text-rose-200" id="legendTds">₹70,850</span>
+              </div>
+
+              <div class="flex items-center justify-between p-2 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40">
+                <span class="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  Employee EPF Contribution
+                </span>
+                <span class="font-mono font-bold text-emerald-900 dark:text-emerald-200" id="legendEpf">₹16,800</span>
+              </div>
+
+              <div class="flex items-center justify-between p-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40" id="npsRow">
+                <span class="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  Employer NPS 80CCD(2)
+                </span>
+                <span class="font-mono font-bold text-amber-900 dark:text-amber-200" id="legendNps">₹0</span>
+              </div>
+
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                  Professional Tax (PT)
+                </span>
+                <span class="font-mono font-bold text-slate-700 dark:text-slate-300" id="legendPt">₹200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gratuity Estimator Pill for Company Tenure -->
+        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-5 border border-slate-800 shadow-sm">
+          <div class="flex items-start justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-indigo-400 text-xs font-bold tracking-wider uppercase">
+                <i data-lucide="award" class="w-4 h-4"></i>
+                Gratuity Accrual Forecast (Based on Current Basic)
+              </div>
+              <p class="text-xs text-slate-300 max-w-lg">
+                Calculated using statutory formula <code class="text-indigo-300 font-mono text-[11px]">(Basic × 15 × Years) / 26</code>. 
+                Service of 4 yrs 8 mos rounds to <strong>5 years</strong>.
+              </p>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Estimated 5-Year Payout</span>
+              <div class="text-xl sm:text-2xl font-extrabold font-mono text-emerald-400" id="gratuityEstimateVal">₹4,03,846</div>
+              <span class="text-[9px] text-emerald-300/80 font-medium">100% Tax-Free (&le; ₹20L)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax Slabs Detailed Table -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <i data-lucide="table-2" class="w-4 h-4 text-indigo-500"></i>
+              Tax Calculation Breakdown (<span id="activeRegimeLabel">New Tax Regime</span>)
+            </h3>
+            <span class="text-[11px] font-mono text-slate-500" id="stdDeductionLabel">Std. Deduction: ₹75,000</span>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-xs text-left">
+              <thead class="text-slate-400 border-b border-slate-100 dark:border-slate-800 font-semibold uppercase text-[10px]">
+                <tr>
+                  <th class="py-2.5 px-3">Tax Bracket</th>
+                  <th class="py-2.5 px-3 text-right">Rate</th>
+                  <th class="py-2.5 px-3 text-right">Taxable in Bracket</th>
+                  <th class="py-2.5 px-3 text-right">Tax Payable</th>
+                </tr>
+              </thead>
+              <tbody id="taxSlabsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-slate-700 dark:text-slate-300">
+                <!-- Dynamically populated rows -->
+              </tbody>
+              <tfoot class="border-t-2 border-slate-200 dark:border-slate-700 font-mono text-xs">
+                <tr>
+                  <td colspan="3" class="py-2 px-3 text-slate-500 font-sans text-right">Net Base Tax:</td>
+                  <td class="py-2 px-3 text-right font-bold text-slate-900 dark:text-white" id="tableBaseTax">₹0</td>
+                </tr>
+                <tr id="rebateRow">
+                  <td colspan="3" class="py-1 px-3 text-emerald-600 font-sans text-right">Sec 87A Rebate:</td>
+                  <td class="py-1 px-3 text-right font-bold text-emerald-600" id="tableRebate">-₹0</td>
+                </tr>
+                <tr>
+                  <td colspan="3" class="py-1 px-3 text-slate-500 font-sans text-right">Health & Education Cess (4%):</td>
+                  <td class="py-1 px-3 text-right font-bold text-slate-900 dark:text-white" id="tableCess">₹0</td>
+                </tr>
+                <tr class="text-sm font-bold bg-slate-50 dark:bg-slate-800/40">
+                  <td colspan="3" class="py-2.5 px-3 text-slate-900 dark:text-white font-sans text-right">Total Annual Tax (TDS):</td>
+                  <td class="py-2.5 px-3 text-right text-rose-600 dark:text-rose-400 font-extrabold" id="tableTotalTax">₹0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Monthly vs Annual Summary Ledger Table -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i>
+            Monthly vs Annual Comprehensive Ledger
+          </h3>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-xs text-left">
+              <thead class="text-slate-400 border-b border-slate-100 dark:border-slate-800 font-semibold uppercase text-[10px]">
+                <tr>
+                  <th class="py-2.5 px-3">Salary Component</th>
+                  <th class="py-2.5 px-3 text-right">Monthly Amount</th>
+                  <th class="py-2.5 px-3 text-right">Annual Amount</th>
+                  <th class="py-2.5 px-3 text-right">% of CTC</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-slate-700 dark:text-slate-300">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 dark:border-slate-800 mt-12 py-6 text-center text-xs text-slate-400">
+    <p>Simulated under Union Budget revised slabs for FY 2025-26 / 2026-27 and statutory gratuity formulas.</p>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // State management
+    const state = {
+      ctc: 4200000,
+      basicPercent: 40,
+      pfMode: 'full', // 'capped' | 'full'
+      npsPercent: 0,
+      regime: 'new',  // 'new' | 'old'
+      oldDeductions: {
+        sec80C: 150000,
+        sec80D: 25000,
+        hra: 0,
+        homeLoan: 0
+      }
+    };
+
+    let donutChart = null;
+
+    // Currency Formatter helper
+    function formatINR(val, compact = false) {
+      if (isNaN(val)) return '₹0';
+      val = Math.round(val);
+      if (compact) {
+        if (Math.abs(val) >= 10000000) {
+          return '₹' + (val / 10000000).toFixed(2) + ' Cr';
+        }
+        if (Math.abs(val) >= 100000) {
+          return '₹' + (val / 100000).toFixed(2) + 'L';
+        }
+      }
+      return '₹' + val.toLocaleString('en-IN');
+    }
+
+    // Initialize Chart
+    function initChart() {
+      const ctx = document.getElementById('monthlyDonutChart').getContext('2d');
+      donutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['In-Hand Pay', 'Income Tax (TDS)', 'EPF', 'NPS 80CCD(2)', 'Prof. Tax'],
+          datasets: [{
+            data: [262150, 70850, 16800, 0, 200],
+            backgroundColor: [
+              '#4f46e5', // Indigo
+              '#f43f5e', // Rose
+              '#10b981', // Emerald
+              '#f59e0b', // Amber
+              '#94a3b8'  // Slate
+            ],
+            borderWidth: 2,
+            borderColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${formatINR(context.raw)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Tax Engine: New Regime (FY 2025-26 & FY 2026-27 Slabs)
+    // Slabs:
+    // 0 - 4L: 0%
+    // 4L - 8L: 5%
+    // 8L - 12L: 10%
+    // 12L - 16L: 15%
+    // 16L - 20L: 20%
+    // 20L - 24L: 25%
+    // Above 24L: 30%
+    // Std Deduction: 75,000
+    // Sec 87A rebate: Up to 12L taxable income => Nil tax (max 60,000 rebate)
+    function calculateNewRegimeTax(taxableIncome) {
+      const slabs = [
+        { min: 0, max: 400000, rate: 0.0 },
+        { min: 400000, max: 800000, rate: 0.05 },
+        { min: 800000, max: 1200000, rate: 0.10 },
+        { min: 1200000, max: 1600000, rate: 0.15 },
+        { min: 1600000, max: 2000000, rate: 0.20 },
+        { min: 2000000, max: 2400000, rate: 0.25 },
+        { min: 2400000, max: Infinity, rate: 0.30 }
+      ];
+
+      let baseTax = 0;
+      const slabRows = [];
+
+      for (let slab of slabs) {
+        if (taxableIncome > slab.min) {
+          const taxableInSlab = Math.min(taxableIncome, slab.max) - slab.min;
+          const taxOnSlab = taxableInSlab * slab.rate;
+          baseTax += taxOnSlab;
+
+          slabRows.push({
+            label: slab.max === Infinity ? `Above ₹24,00,000` : `₹${(slab.min/100000)}L – ₹${(slab.max/100000)}L`,
+            rate: `${(slab.rate * 100)}%`,
+            taxable: taxableInSlab,
+            tax: taxOnSlab
+          });
+        }
+      }
+
+      // 87A Rebate logic: Zero tax if taxable income <= 12,00,000
+      let rebate = 0;
+      if (taxableIncome <= 1200000) {
+        rebate = baseTax;
+      }
+
+      const taxAfterRebate = Math.max(0, baseTax - rebate);
+      const cess = Math.round(taxAfterRebate * 0.04);
+      const totalTax = taxAfterRebate + cess;
+
+      return {
+        baseTax,
+        rebate,
+        cess,
+        totalTax,
+        slabRows
+      };
+    }
+
+    // Tax Engine: Old Regime
+    // Slabs:
+    // 0 - 2.5L: 0%
+    // 2.5L - 5L: 5%
+    // 5L - 10L: 20%
+    // Above 10L: 30%
+    // Std Deduction: 50,000
+    // Sec 87A rebate: Up to 5L taxable income => max 12,500 rebate
+    function calculateOldRegimeTax(taxableIncome) {
+      const slabs = [
+        { min: 0, max: 250000, rate: 0.0 },
+        { min: 250000, max: 500000, rate: 0.05 },
+        { min: 500000, max: 1000000, rate: 0.20 },
+        { min: 1000000, max: Infinity, rate: 0.30 }
+      ];
+
+      let baseTax = 0;
+      const slabRows = [];
+
+      for (let slab of slabs) {
+        if (taxableIncome > slab.min) {
+          const taxableInSlab = Math.min(taxableIncome, slab.max) - slab.min;
+          const taxOnSlab = taxableInSlab * slab.rate;
+          baseTax += taxOnSlab;
+
+          slabRows.push({
+            label: slab.max === Infinity ? `Above ₹10,00,000` : `₹${(slab.min/100000)}L – ₹${(slab.max/100000)}L`,
+            rate: `${(slab.rate * 100)}%`,
+            taxable: taxableInSlab,
+            tax: taxOnSlab
+          });
+        }
+      }
+
+      let rebate = 0;
+      if (taxableIncome <= 500000) {
+        rebate = Math.min(baseTax, 12500);
+      }
+
+      const taxAfterRebate = Math.max(0, baseTax - rebate);
+      const cess = Math.round(taxAfterRebate * 0.04);
+      const totalTax = taxAfterRebate + cess;
+
+      return {
+        baseTax,
+        rebate,
+        cess,
+        totalTax,
+        slabRows
+      };
+    }
+
+    // Main Recalculate function
+    function recalculate() {
+      const ctc = state.ctc;
+      const monthlyGross = ctc / 12;
+
+      // Basic Salary calculations
+      const annualBasic = ctc * (state.basicPercent / 100);
+      const monthlyBasic = annualBasic / 12;
+
+      // Employee EPF calculation
+      let monthlyPf = 0;
+      if (state.pfMode === 'capped') {
+        monthlyPf = 1800;
+      } else {
+        monthlyPf = monthlyBasic * 0.12;
+      }
+      const annualPf = monthlyPf * 12;
+
+      // Employer NPS [80CCD(2)] deduction (allowed under both regimes)
+      const annualNps = annualBasic * (state.npsPercent / 100);
+      const monthlyNps = annualNps / 12;
+
+      // Professional Tax (standard ₹200/month = ₹2,400/yr)
+      const annualPt = 2400;
+      const monthlyPt = 200;
+
+      // Compute Tax under Both Regimes for comparative intelligence
+      // 1. New Regime
+      const stdDeductionNew = 75000;
+      const taxableIncomeNew = Math.max(0, ctc - stdDeductionNew - annualNps);
+      const taxResultNew = calculateNewRegimeTax(taxableIncomeNew);
+
+      // 2. Old Regime
+      const stdDeductionOld = 50000;
+      const totalOldDeductions = (
+        state.oldDeductions.sec80C + 
+        state.oldDeductions.sec80D + 
+        state.oldDeductions.hra + 
+        state.oldDeductions.homeLoan + 
+        annualPt + 
+        annualNps
+      );
+      const taxableIncomeOld = Math.max(0, ctc - stdDeductionOld - totalOldDeductions);
+      const taxResultOld = calculateOldRegimeTax(taxableIncomeOld);
+
+      // Determine active result based on selected regime
+      const isNew = state.regime === 'new';
+      const activeTaxResult = isNew ? taxResultNew : taxResultOld;
+      const annualTax = activeTaxResult.totalTax;
+      const monthlyTax = annualTax / 12;
+
+      // Net Monthly Take-Home (Cash in hand)
+      const monthlyInHand = Math.max(0, monthlyGross - monthlyTax - monthlyPf - monthlyNps - monthlyPt);
+      const annualInHand = monthlyInHand * 12;
+
+      // Gratuity calculation for 5 years multiplier
+      const gratuityEstimate = Math.round((monthlyBasic * 15 * 5) / 26);
+
+      // --- Update DOM Elements ---
+      // Input badges
+      document.getElementById('ctcBadge').innerText = formatINR(ctc, true);
+      document.getElementById('basicPercentBadge').innerText = `${state.basicPercent}%`;
+      document.getElementById('monthlyBasicText').innerText = formatINR(monthlyBasic);
+      document.getElementById('annualBasicText').innerText = formatINR(annualBasic, true);
+      document.getElementById('pfFullSubtext').innerText = formatINR(monthlyBasic * 0.12) + '/mo';
+      document.getElementById('npsBadge').innerText = `${state.npsPercent}% of Basic`;
+      document.getElementById('npsAnnualDeductionText').innerText = `${formatINR(annualNps)}/yr`;
+
+      // KPI Cards
+      document.getElementById('kpiMonthlyInHand').innerText = formatINR(monthlyInHand);
+      document.getElementById('kpiAnnualInHand').innerText = formatINR(annualInHand, true);
+      document.getElementById('kpiMonthlyTax').innerText = formatINR(monthlyTax);
+      document.getElementById('kpiAnnualTax').innerText = formatINR(annualTax, true);
+      document.getElementById('kpiMonthlyPf').innerText = formatINR(monthlyPf);
+      document.getElementById('kpiAnnualPf').innerText = formatINR(annualPf, true);
+
+      // Monthly Gross Header
+      document.getElementById('monthlyGrossHeader').innerText = formatINR(monthlyGross);
+
+      // Gratuity Card
+      document.getElementById('gratuityEstimateVal').innerText = formatINR(gratuityEstimate);
+
+      // Regime Comparison Banner
+      const diff = Math.abs(taxResultNew.totalTax - taxResultOld.totalTax);
+      const comparisonBadge = document.getElementById('comparisonDiffBadge');
+      const comparisonTitle = document.getElementById('comparisonTitle');
+      const comparisonSubtitle = document.getElementById('comparisonSubtitle');
+
+      if (taxResultNew.totalTax < taxResultOld.totalTax) {
+        comparisonTitle.innerText = "New Tax Regime is More Beneficial";
+        comparisonSubtitle.innerText = `You save ${formatINR(diff)} in annual taxes compared to the Old Regime.`;
+        comparisonBadge.className = "text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300";
+        comparisonBadge.innerText = `New saves ${formatINR(diff)}/yr`;
+      } else if (taxResultOld.totalTax < taxResultNew.totalTax) {
+        comparisonTitle.innerText = "Old Tax Regime is More Beneficial";
+        comparisonSubtitle.innerText = `With your claimed exemptions, Old Regime saves ${formatINR(diff)} in taxes.`;
+        comparisonBadge.className = "text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300";
+        comparisonBadge.innerText = `Old saves ${formatINR(diff)}/yr`;
+      } else {
+        comparisonTitle.innerText = "Both Regimes Yield Equal Tax";
+        comparisonSubtitle.innerText = "Your deductions match the break-even threshold exactly.";
+        comparisonBadge.className = "text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300";
+        comparisonBadge.innerText = "Neutral";
+      }
+
+      // Chart Update
+      if (donutChart) {
+        donutChart.data.datasets[0].data = [
+          Math.max(0, Math.round(monthlyInHand)),
+          Math.max(0, Math.round(monthlyTax)),
+          Math.round(monthlyPf),
+          Math.round(monthlyNps),
+          Math.round(monthlyPt)
+        ];
+        donutChart.options.plugins.tooltip.callbacks.label = function(c) {
+          return ` ${c.label}: ${formatINR(c.raw)}`;
+        };
+        donutChart.update();
+      }
+
+      const inHandPct = ((monthlyInHand / monthlyGross) * 100).toFixed(1);
+      document.getElementById('inHandPercentCenter').innerText = `${inHandPct}%`;
+
+      // Legend
+      document.getElementById('legendInHand').innerText = formatINR(monthlyInHand);
+      document.getElementById('legendTds').innerText = formatINR(monthlyTax);
+      document.getElementById('legendEpf').innerText = formatINR(monthlyPf);
+      document.getElementById('legendNps').innerText = formatINR(monthlyNps);
+      document.getElementById('legendPt').innerText = formatINR(monthlyPt);
+
+      // Tax Slabs Breakdown Table
+      document.getElementById('activeRegimeLabel').innerText = isNew ? 'New Tax Regime (FY 2025-27)' : 'Old Tax Regime';
+      document.getElementById('stdDeductionLabel').innerText = `Std. Deduction: ${formatINR(isNew ? stdDeductionNew : stdDeductionOld)}`;
+
+      const tbody = document.getElementById('taxSlabsTableBody');
+      tbody.innerHTML = '';
+      activeTaxResult.slabRows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-medium">${row.label}</td>
+          <td class="py-2.5 px-3 text-right text-slate-500">${row.rate}</td>
+          <td class="py-2.5 px-3 text-right">${formatINR(row.taxable)}</td>
+          <td class="py-2.5 px-3 text-right font-bold">${formatINR(row.tax)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('tableBaseTax').innerText = formatINR(activeTaxResult.baseTax);
+      
+      const rebateRow = document.getElementById('rebateRow');
+      if (activeTaxResult.rebate > 0) {
+        rebateRow.classList.remove('hidden');
+        document.getElementById('tableRebate').innerText = `-${formatINR(activeTaxResult.rebate)}`;
+      } else {
+        rebateRow.classList.add('hidden');
+      }
+
+      document.getElementById('tableCess').innerText = formatINR(activeTaxResult.cess);
+      document.getElementById('tableTotalTax').innerText = formatINR(activeTaxResult.totalTax);
+
+      // Ledger Table
+      const summaryBody = document.getElementById('summaryTableBody');
+      summaryBody.innerHTML = `
+        <tr>
+          <td class="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Annual CTC / Gross Salary</td>
+          <td class="py-2.5 px-3 text-right font-semibold">${formatINR(monthlyGross)}</td>
+          <td class="py-2.5 px-3 text-right font-semibold">${formatINR(ctc)}</td>
+          <td class="py-2.5 px-3 text-right text-slate-500">100.0%</td>
+        </tr>
+        <tr>
+          <td class="py-2 px-3 text-slate-600 dark:text-slate-400 pl-6">• Basic Salary Component</td>
+          <td class="py-2 px-3 text-right">${formatINR(monthlyBasic)}</td>
+          <td class="py-2 px-3 text-right">${formatINR(annualBasic)}</td>
+          <td class="py-2 px-3 text-right text-slate-500">${state.basicPercent}%</td>
+        </tr>
+        <tr>
+          <td class="py-2 px-3 text-slate-600 dark:text-slate-400 pl-6">• Special Allowances & HRA (Bal.)</td>
+          <td class="py-2 px-3 text-right">${formatINR(monthlyGross - monthlyBasic)}</td>
+          <td class="py-2 px-3 text-right">${formatINR(ctc - annualBasic)}</td>
+          <td class="py-2 px-3 text-right text-slate-500">${(100 - state.basicPercent).toFixed(1)}%</td>
+        </tr>
+        <tr class="text-rose-600 dark:text-rose-400">
+          <td class="py-2 px-3 pl-6 font-medium">(-) Income Tax Deducted (TDS)</td>
+          <td class="py-2 px-3 text-right font-bold">-${formatINR(monthlyTax)}</td>
+          <td class="py-2 px-3 text-right font-bold">-${formatINR(annualTax)}</td>
+          <td class="py-2 px-3 text-right">${((annualTax / ctc) * 100).toFixed(1)}%</td>
+        </tr>
+        <tr class="text-emerald-600 dark:text-emerald-400">
+          <td class="py-2 px-3 pl-6 font-medium">(-) Employee EPF Contribution</td>
+          <td class="py-2 px-3 text-right font-bold">-${formatINR(monthlyPf)}</td>
+          <td class="py-2 px-3 text-right font-bold">-${formatINR(annualPf)}</td>
+          <td class="py-2 px-3 text-right">${((annualPf / ctc) * 100).toFixed(1)}%</td>
+        </tr>
+        ${state.npsPercent > 0 ? `
+        <tr class="text-amber-600 dark:text-amber-400">
+          <td class="py-2 px-3 pl-6 font-medium">(-) Employer NPS [80CCD(2)]</td>
+          <td class="py-2 px-3 text-right font-bold">-${formatINR(monthlyNps)}</td>
+          <td class="py-2 px-3 text-right font-bold">-${formatINR(annualNps)}</td>
+          <td class="py-2 px-3 text-right">${((annualNps / ctc) * 100).toFixed(1)}%</td>
+        </tr>` : ''}
+        <tr>
+          <td class="py-2 px-3 pl-6 text-slate-500">(-) Professional Tax</td>
+          <td class="py-2 px-3 text-right">-${formatINR(monthlyPt)}</td>
+          <td class="py-2 px-3 text-right">-${formatINR(annualPt)}</td>
+          <td class="py-2 px-3 text-right text-slate-500">${((annualPt / ctc) * 100).toFixed(2)}%</td>
+        </tr>
+        <tr class="bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 font-bold text-sm">
+          <td class="py-3 px-3">(=) Net In-Hand Take-Home</td>
+          <td class="py-3 px-3 text-right font-extrabold">${formatINR(monthlyInHand)}</td>
+          <td class="py-3 px-3 text-right font-extrabold">${formatINR(annualInHand)}</td>
+          <td class="py-3 px-3 text-right">${inHandPct}%</td>
+        </tr>
+      `;
+    }
+
+    // Interactive event bindings
+    function setCtc(val) {
+      state.ctc = Number(val);
+      document.getElementById('ctcInput').value = state.ctc;
+      document.getElementById('ctcSlider').value = state.ctc;
+      recalculate();
+    }
+
+    function setPfMode(mode) {
+      state.pfMode = mode;
+      const cappedBtn = document.getElementById('pfModeCapped');
+      const fullBtn = document.getElementById('pfModeFull');
+
+      if (mode === 'capped') {
+        cappedBtn.className = "py-2 px-3 text-xs font-semibold rounded-lg text-center transition flex flex-col items-center gap-0.5 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-600";
+        fullBtn.className = "py-2 px-3 text-xs font-semibold rounded-lg text-center transition flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600";
+      } else {
+        fullBtn.className = "py-2 px-3 text-xs font-semibold rounded-lg text-center transition flex flex-col items-center gap-0.5 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-600";
+        cappedBtn.className = "py-2 px-3 text-xs font-semibold rounded-lg text-center transition flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600";
+      }
+      recalculate();
+    }
+
+    function setRegime(regime) {
+      state.regime = regime;
+      const newBtn = document.getElementById('regimeNewBtn');
+      const oldBtn = document.getElementById('regimeOldBtn');
+      const oldOptions = document.getElementById('oldRegimeOptions');
+
+      if (regime === 'new') {
+        newBtn.className = "py-2.5 px-3 rounded-lg text-xs font-bold text-center transition flex flex-col items-center justify-center bg-indigo-600 text-white shadow";
+        oldBtn.className = "py-2.5 px-3 rounded-lg text-xs font-semibold text-center transition flex flex-col items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600";
+        oldOptions.classList.add('hidden');
+      } else {
+        oldBtn.className = "py-2.5 px-3 rounded-lg text-xs font-bold text-center transition flex flex-col items-center justify-center bg-indigo-600 text-white shadow";
+        newBtn.className = "py-2.5 px-3 rounded-lg text-xs font-semibold text-center transition flex flex-col items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600";
+        oldOptions.classList.remove('hidden');
+      }
+      recalculate();
+    }
+
+    function resetDefaults() {
+      setCtc(4200000);
+      state.basicPercent = 40;
+      document.getElementById('basicPercentSlider').value = 40;
+      setPfMode('full');
+      state.npsPercent = 0;
+      document.getElementById('npsSlider').value = 0;
+      setRegime('new');
+      state.oldDeductions = { sec80C: 150000, sec80D: 25000, hra: 0, homeLoan: 0 };
+      document.getElementById('ded80CSlider').value = 150000;
+      document.getElementById('ded80DSlider').value = 25000;
+      document.getElementById('dedHraSlider').value = 0;
+      document.getElementById('dedHomeLoanSlider').value = 0;
+      recalculate();
+    }
+
+    // Set up inputs & listeners on Load
+    window.onload = function () {
+      lucide.createIcons();
+      initChart();
+
+      // CTC Input sync
+      const ctcInput = document.getElementById('ctcInput');
+      const ctcSlider = document.getElementById('ctcSlider');
+
+      ctcInput.addEventListener('input', (e) => {
+        let val = Number(e.target.value);
+        if (val < 100000) return;
+        state.ctc = val;
+        ctcSlider.value = val;
+        recalculate();
+      });
+
+      ctcSlider.addEventListener('input', (e) => {
+        let val = Number(e.target.value);
+        state.ctc = val;
+        ctcInput.value = val;
+        recalculate();
+      });
+
+      // Basic percentage slider
+      const basicSlider = document.getElementById('basicPercentSlider');
+      basicSlider.addEventListener('input', (e) => {
+        state.basicPercent = Number(e.target.value);
+        recalculate();
+      });
+
+      // NPS slider
+      const npsSlider = document.getElementById('npsSlider');
+      npsSlider.addEventListener('input', (e) => {
+        state.npsPercent = Number(e.target.value);
+        recalculate();
+      });
+
+      // Old Regime Deductions
+      const ded80C = document.getElementById('ded80CSlider');
+      ded80C.addEventListener('input', (e) => {
+        state.oldDeductions.sec80C = Number(e.target.value);
+        document.getElementById('ded80CBadge').innerText = formatINR(e.target.value);
+        recalculate();
+      });
+
+      const ded80D = document.getElementById('ded80DSlider');
+      ded80D.addEventListener('input', (e) => {
+        state.oldDeductions.sec80D = Number(e.target.value);
+        document.getElementById('ded80DBadge').innerText = formatINR(e.target.value);
+        recalculate();
+      });
+
+      const dedHra = document.getElementById('dedHraSlider');
+      dedHra.addEventListener('input', (e) => {
+        state.oldDeductions.hra = Number(e.target.value);
+        document.getElementById('dedHraBadge').innerText = formatINR(e.target.value);
+        recalculate();
+      });
+
+      const dedHome = document.getElementById('dedHomeLoanSlider');
+      dedHome.addEventListener('input', (e) => {
+        state.oldDeductions.homeLoan = Number(e.target.value);
+        document.getElementById('dedHomeLoanBadge').innerText = formatINR(e.target.value);
+        recalculate();
+      });
+
+      // Dark mode toggle
+      const themeToggle = document.getElementById('themeToggle');
+      const moonIcon = document.getElementById('moonIcon');
+      const sunIcon = document.getElementById('sunIcon');
+
+      themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        if (isDark) {
+          moonIcon.classList.add('hidden');
+          sunIcon.classList.remove('hidden');
+          if (donutChart) {
+            donutChart.data.datasets[0].borderColor = '#0f172a';
+            donutChart.update();
+          }
+        } else {
+          moonIcon.classList.remove('hidden');
+          sunIcon.classList.add('hidden');
+          if (donutChart) {
+            donutChart.data.datasets[0].borderColor = '#ffffff';
+            donutChart.update();
+          }
+        }
+      });
+
+      // Initial calculation run
+      recalculate();
+    };
+  </script>
+</body>
+</html>
